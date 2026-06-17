@@ -16,6 +16,12 @@ config/service_account.json
 *.xlsx
 *.xls
 tests/fixtures/*.xlsx
+inbox/*.xlsx
+inbox/*.xls
+inbox/processados/*.xlsx
+inbox/processados/*.xls
+!inbox/.gitkeep
+!inbox/processados/.gitkeep
 output/*
 !output/.gitkeep
 logs/*
