@@ -3,8 +3,6 @@ openpyxl>=3.1
 python-dotenv>=1.0
 requests>=2.31
 APScheduler>=3.10
-google-api-python-client>=2.100
-google-auth>=2.20
 pytest>=7.4
 # Opcional (Fase 6 — snapshot PNG inline no e-mail):
 # playwright>=1.40

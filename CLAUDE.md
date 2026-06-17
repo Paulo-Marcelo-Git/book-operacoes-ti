@@ -35,11 +35,11 @@ O Book monta SVG via JavaScript no `window.onload`. Outlook/Gmail **removem `<sc
 - **Anexo** = o Book interativo completo (`.html`), que abre no navegador com todos os gráficos.
 - **Fase 2 (opcional)** = snapshot PNG do Book via Playwright (headless) embutido inline (`cid:`) para preview visual no corpo.
 
-### 2.3. Acesso ao Drive: Service Account (job headless)
-Como roda sem interação humana, usar **Service Account** (não OAuth de usuário):
-- Cria-se a conta de serviço no Google Cloud, gera-se a chave JSON;
-- **Compartilha-se a pasta do Drive com o e-mail da service account** (leitor);
-- Sem refresh token / sem login interativo. Ideal para cron.
+### 2.3. Acesso à planilha: pasta local `inbox/`
+O arquivo `.xlsx` é depositado manualmente na pasta `inbox/` às 08:00.
+O pipeline executa às 09:00 e lê o arquivo mais recente (`mtime`).
+Após processamento bem-sucedido, o arquivo é movido para `inbox/processados/`.
+Se `inbox/` estiver vazia, o pipeline falha na etapa "download" com `FileNotFoundError`.
 
 ### 2.4. Renderização do template: injeção por marcador (não Jinja)
 O template tem muito JavaScript com `{` e `}`. Usar Jinja exigiria escapar tudo. Mais simples e robusto:
@@ -310,11 +310,8 @@ Rastrear `etapa_atual` numa variável para o alerta de erro dizer **onde** quebr
 
 `.env.example`:
 ```
-# Google Drive
-GDRIVE_FOLDER_ID=1fhSjKuV9c6DmkxAABFDQxrICjczWKJ34
-# A pasta tem o nome com sufixo numérico variável -> usar padrão e pegar o mais recente:
-GDRIVE_FILE_PATTERN=Operações_de_TI_-_GERAL_Áreas_*.xlsx
-GDRIVE_SA_JSON=config/service_account.json
+# Inbox local
+INBOX_DIR=inbox
 
 # Email (Gmail — reaproveitando a conta do FlowETL)
 EMAIL_USER=seu_bot@gmail.com
