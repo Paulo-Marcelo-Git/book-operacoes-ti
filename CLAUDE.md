@@ -83,6 +83,8 @@ book-operacoes-ti/
 ├── templates/
 │   └── book_template.html     # o mock, com o marcador /*__DATA__*/
 ├── output/                    # books gerados por data (GITIGNORED)
+├── inbox/                     # planilha depositada diariamente (GITIGNORED)
+│   └── processados/           # planilhas processadas (GITIGNORED)
 ├── logs/                      # logs diários (GITIGNORED)
 ├── src/
 │   └── book_ti/

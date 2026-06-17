@@ -43,12 +43,14 @@ def run(no_email: bool = False, no_telegram: bool = False, arquivo: str | None =
             etapa = "email"
             n_dest = mailer.enviar(html_path, D)
 
-        if from_inbox:
-            etapa = "mover arquivo"
-            local_client.mover_processado(caminho)
-
         if not no_telegram:
             notifier.sucesso(nome_arquivo, D, n_dest)
+
+        if from_inbox:
+            try:
+                local_client.mover_processado(caminho)
+            except Exception as move_exc:
+                log.warning("Não foi possível mover o arquivo processado: %s", move_exc)
 
         log.info("==== rodada concluída ====")
         return html_path
