@@ -9,7 +9,7 @@
 
 Aplicação Python que **todos os dias às 09:00**:
 
-1. Baixa uma planilha (`.xlsx`) de uma **pasta do Google Drive**;
+1. Lê uma planilha (`.xlsx`) da **pasta local `inbox/`**;
 2. Processa os dados com **pandas** e produz as agregações da operação de TI;
 3. Injeta esses dados em um **template HTML** (o "Book", já desenhado) gerando um dashboard interativo;
 4. **Envia por e-mail** um resumo KPI (corpo) + o Book completo (anexo).
@@ -59,7 +59,6 @@ O entrypoint `run.py` executa **uma rodada** (one-shot). O `scheduler.py` só en
 | Camada | Biblioteca |
 |---|---|
 | Leitura planilha | `pandas`, `openpyxl` |
-| Google Drive | `google-api-python-client`, `google-auth` |
 | Render HTML | string injection + `json` (stdlib) |
 | E-mail | `smtplib` + `email` (stdlib) — *default*; Gmail API como alternativa |
 | Alertas | Telegram Bot API via `requests` (POST `sendMessage`) |
@@ -81,8 +80,6 @@ book-operacoes-ti/
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
-├── config/
-│   └── service_account.json   # chave da service account (GITIGNORED)
 ├── templates/
 │   └── book_template.html     # o mock, com o marcador /*__DATA__*/
 ├── output/                    # books gerados por data (GITIGNORED)
@@ -92,7 +89,7 @@ book-operacoes-ti/
 │       ├── __init__.py
 │       ├── config.py          # carrega .env + mapeamento de colunas
 │       ├── logging_setup.py   # double-sink (console + arquivo)
-│       ├── drive_client.py    # localiza e baixa a planilha do Drive
+│       ├── local_client.py    # lê o xlsx mais recente de inbox/ e move após processamento
 │       ├── transform.py       # pandas DataFrame -> dict D
 │       ├── render.py          # injeta D no template -> HTML final
 │       ├── mailer.py          # monta corpo email-safe + anexa book + envia
@@ -106,7 +103,7 @@ book-operacoes-ti/
 └── run.py                     # entrypoint one-shot: roda 1 pipeline e sai
 ```
 
-`.gitignore` deve conter: `config/service_account.json`, `.env`, `output/`, `logs/`, `__pycache__/`, `*.pyc`.
+`.gitignore` deve conter: `.env`, `output/`, `logs/`, `__pycache__/`, `*.pyc`.
 
 ---
 
@@ -289,7 +286,7 @@ Variáveis (`.env`): `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`.
 def run():
     log.info("início da rodada")
     try:
-        xlsx   = drive_client.baixar()          # etapa = "download"
+        xlsx   = local_client.baixar()          # etapa = "download"
         df     = ler(xlsx)                       # etapa = "leitura"
         D      = transform.build(df)             # etapa = "transform"
         html   = render.gerar(D)                 # etapa = "render"
@@ -355,16 +352,11 @@ nome/padrão do arquivo no Drive, e os números-alvo de validação.
 
 Ainda em aberto:
 
-1. **Service Account no Drive**: criar a conta de serviço no Google Cloud e **compartilhar a pasta
-   `1fhSjKuV9c6DmkxAABFDQxrICjczWKJ34` com o e-mail dela** (acesso de leitor). A pasta hoje é de
-   `lkh@tf.com.br` / `pcs@tf.com.br`.
-2. **A pasta também contém 3 books `.html` antigos** — o `drive_client` deve filtrar por
-   `mimeType = '...spreadsheetml.sheet'` (xlsx), nunca por `.html`.
-3. ~~Servidor SMTP~~ ✅ Resolvido: Gmail (`seu_bot@gmail.com`) reaproveitado do FlowETL, com
+1. ~~Servidor SMTP~~ ✅ Resolvido: Gmail (`seu_bot@gmail.com`) reaproveitado do FlowETL, com
    App Password já existente. Falta só preencher `EMAIL_PASS` no `.env` local.
-4. **Host/fuso do agendamento**: o WSL precisa estar ligado às 09:00. Se a máquina costuma ficar
+2. **Host/fuso do agendamento**: o WSL precisa estar ligado às 09:00. Se a máquina costuma ficar
    desligada, considerar servidor dedicado ou Agendador de Tarefas do Windows.
-5. **Janela de dados**: a planilha é sempre um *snapshot* completo (acumulado) ou já vem filtrada por
+3. **Janela de dados**: a planilha é sempre um *snapshot* completo (acumulado) ou já vem filtrada por
    período? Isso define se o book é "do dia" ou "acumulado". (Hoje o mock trata como acumulado.)
 
 ---
@@ -373,7 +365,7 @@ Ainda em aberto:
 
 - **Fase 0 — Setup**: estrutura de pastas, `requirements.txt`, `.env.example`, `logging_setup.py`, preparar `book_template.html` com o marcador.
 - **Fase 1 — Transform offline**: com a amostra `.xlsx`, implementar `transform.py` + `test_transform.py`. Render local e abrir no navegador. (Sem Drive, sem e-mail ainda.)
-- **Fase 2 — Drive**: `drive_client.py` baixando a planilha real.
+- **Fase 2 — Inbox**: `local_client.py` lendo de `inbox/` (✅ concluído).
 - **Fase 3 — E-mail**: `mailer.py` com corpo email-safe + anexo. Teste enviando para você mesmo.
 - **Fase 4 — Orquestração**: `pipeline.py` + `run.py` (one-shot) ponta a ponta.
 - **Fase 4.5 — Alertas Telegram**: `notifier.py` + integração no `pipeline.py` (✅ sucesso / ❌ erro).
@@ -430,7 +422,7 @@ Cole isto na primeira mensagem do Claude Code, com o `CLAUDE.md` na raiz do proj
 
 - Logging double-sink (console + `logs/book_AAAA-MM-DD.log`), igual ao FlowETL.
 - Alertas Telegram nunca derrubam o pipeline; se token/chat vazios, viram no-op.
-- Nada de segredos no código nem no Git: `.env`, `service_account.json` e o token do Telegram são *gitignored*.
+- Nada de segredos no código nem no Git: `.env` e o token do Telegram são *gitignored*.
 - Toda agregação testável isoladamente (input DataFrame → output dict), sem depender de Drive/SMTP.
 - `run.py` deve ser idempotente: rodar 2x no mesmo dia só regera o book/e-mail, sem efeito colateral persistente.
 - Código e comentários em PT-BR; nomes de variáveis podem ser em inglês.
