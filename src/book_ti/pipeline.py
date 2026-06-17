@@ -1,10 +1,10 @@
-"""Orquestra a rodada: download -> transform -> render -> e-mail -> alerta.
+"""Orquestra a rodada: leitura -> transform -> render -> e-mail -> alerta.
 
 Rastreia a etapa atual para que o alerta de erro diga exatamente onde quebrou.
 """
 from pathlib import Path
 
-from . import drive_client, mailer, notifier, render, transform
+from . import local_client, mailer, notifier, render, transform
 from .logging_setup import current_log_path, get_logger
 
 log = get_logger()
@@ -14,6 +14,7 @@ def run(no_email: bool = False, no_telegram: bool = False, arquivo: str | None =
     """Executa uma rodada completa. Levanta exceção em caso de falha (após alertar)."""
     etapa = "início"
     nome_arquivo = None
+    from_inbox = False
     log.info("==== início da rodada ====")
     try:
         if arquivo:
@@ -23,8 +24,9 @@ def run(no_email: bool = False, no_telegram: bool = False, arquivo: str | None =
             log.info("Usando arquivo local: %s", caminho)
         else:
             etapa = "download"
-            caminho = drive_client.baixar()
+            caminho = local_client.baixar()
             nome_arquivo = caminho.name
+            from_inbox = True
 
         etapa = "transform"
         D = transform.build_from_file(caminho)
@@ -40,6 +42,10 @@ def run(no_email: bool = False, no_telegram: bool = False, arquivo: str | None =
         else:
             etapa = "email"
             n_dest = mailer.enviar(html_path, D)
+
+        if from_inbox:
+            etapa = "mover arquivo"
+            local_client.mover_processado(caminho)
 
         if not no_telegram:
             notifier.sucesso(nome_arquivo, D, n_dest)
