@@ -11,10 +11,10 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(BASE_DIR / ".env")
 
-# ---------------------------------------------------------------- Google Drive
-GDRIVE_FOLDER_ID = os.getenv("GDRIVE_FOLDER_ID", "")
-GDRIVE_FILE_PATTERN = os.getenv("GDRIVE_FILE_PATTERN", "*.xlsx")
-GDRIVE_SA_JSON = os.getenv("GDRIVE_SA_JSON", "config/service_account.json")
+# ------------------------------------------------------------------ Inbox local
+INBOX_DIR = BASE_DIR / os.getenv("INBOX_DIR", "inbox")
+INBOX_DIR.mkdir(exist_ok=True)
+(INBOX_DIR / "processados").mkdir(exist_ok=True)
 
 # ----------------------------------------------------------------------- Email
 EMAIL_USER = os.getenv("EMAIL_USER", "")
