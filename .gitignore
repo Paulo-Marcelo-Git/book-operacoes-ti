@@ -1,0 +1,43 @@
+# ============================================================
+#  SEGREDOS / CREDENCIAIS  — NUNCA versionar
+# ============================================================
+.env
+.env.*
+!.env.example
+config/service_account.json
+*.pem
+*.key
+*.p12
+*.json.key
+
+# ============================================================
+#  DADOS REAIS  — NUNCA versionar (contêm nomes/lojas/chamados)
+# ============================================================
+*.xlsx
+*.xls
+tests/fixtures/*.xlsx
+output/*
+!output/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# ============================================================
+#  Python
+# ============================================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ============================================================
+#  SO / Editor
+# ============================================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

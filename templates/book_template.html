@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Book – Operações de TI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+body{display:flex;min-height:100vh;background:#f1f5f9}
+#sb{width:220px;min-height:100vh;background:#0f2044;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.sb-top{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-top h2{color:#fff;font-size:14px;font-weight:700}
+.sb-top p{color:rgba(255,255,255,.4);font-size:11px;margin-top:3px}
+.sb-nav{padding:10px 0;flex:1}
+.si{display:flex;align-items:center;gap:10px;padding:10px 16px;color:rgba(255,255,255,.55);font-size:13px;cursor:pointer;border-left:3px solid transparent;transition:.15s all}
+.si:hover{color:#fff;background:rgba(255,255,255,.06)}
+.si.on{color:#fff;background:rgba(255,255,255,.11);border-left-color:#60a5fa}
+.si-ic{width:20px;text-align:center;font-size:15px}
+.sb-bot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-bot p{color:rgba(255,255,255,.25);font-size:10px}
+#main{margin-left:220px;flex:1}
+.pg{display:none;padding:30px 36px 60px;max-width:1080px}
+.pg.on{display:block}
+.ph{margin-bottom:26px;padding-bottom:14px;border-bottom:2px solid #e2e8f0}
+.ph h1{font-size:19px;font-weight:800;color:#0f172a}
+.ph p{font-size:12px;color:#64748b;margin-top:3px}
+.krow{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+.kc{background:#fff;border-radius:10px;padding:18px 20px;flex:1;min-width:130px;border-top:4px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.kc.b{border-top-color:#2563eb}.kc.r{border-top-color:#ef4444}.kc.a{border-top-color:#f59e0b}.kc.g{border-top-color:#10b981}.kc.v{border-top-color:#7c3aed}.kc.i{border-top-color:#4f46e5}
+.kl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;font-weight:700}
+.kv{font-size:30px;font-weight:900;color:#0f172a;margin:5px 0 3px;line-height:1}
+.ks{font-size:11px;color:#64748b}
+.card{background:#fff;border-radius:10px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:20px}
+.card h3{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;font-weight:700;margin-bottom:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f8fafc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:9px 12px;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid #f1f5f9;color:#1e293b}
+tr:hover td{background:#f8fafc}
+.bx{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.b2{background:#dbeafe;color:#1e40af}.b1{background:#ede9fe;color:#5b21b6}.b3{background:#d1fae5;color:#065f46}
+.kwcard{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center;border-top:5px solid #e2e8f0}
+.kwcard .kwn{font-size:48px;font-weight:900;line-height:1;margin:10px 0 6px}
+.kwcard .kwl{font-size:13px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em}
+.kwcard .kwp{font-size:12px;color:#94a3b8;margin-top:4px}
+.gc{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:5px solid #2563eb}
+.gc.n1{border-left-color:#7c3aed}.gc.n3{border-left-color:#059669}
+.gc h4{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px}
+.gstat{display:flex;justify-content:space-between;font-size:12px;color:#64748b;padding:4px 0;border-bottom:1px solid #f1f5f9}
+.gstat:last-child{border:none}
+.gstat span:last-child{font-weight:700;color:#0f172a}
+svg text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+</style>
+</head>
+<body>
+
+<div id="sb">
+  <div class="sb-top"><h2>Operações de TI</h2><p>Book de Resultados</p></div>
+  <nav class="sb-nav">
+    <div class="si on" onclick="go('tot')"><span class="si-ic">📊</span>Total Chamados</div>
+    <div class="si" onclick="go('grp')"><span class="si-ic">👥</span>Por Grupo</div>
+    <div class="si" onclick="go('ana')"><span class="si-ic">🧑‍💻</span>Por Analista</div>
+    <div class="si" onclick="go('ofe')"><span class="si-ic">🎯</span>Ofensores</div>
+    <div class="si" onclick="go('kwd')"><span class="si-ic">🔍</span>Keywords Descrição</div>
+    <div class="si" onclick="go('sol')"><span class="si-ic">🏆</span>Top Solicitantes</div>
+  </nav>
+  <div class="sb-bot"><p>Gerado em __GERADO_EM__</p></div>
+</div>
+
+<div id="main">
+
+<div id="p-tot" class="pg on">
+  <div class="ph"><h1>Total de Chamados</h1><p>Visão consolidada da operação</p></div>
+  <div class="krow">
+    <div class="kc b"><div class="kl">Total Chamados</div><div class="kv">1.595</div><div class="ks">todos os registros</div></div>
+    <div class="kc a"><div class="kl">Incidentes</div><div class="kv">1.248</div><div class="ks">78,2% do total</div></div>
+    <div class="kc i"><div class="kl">Solicitações</div><div class="kv">347</div><div class="ks">21,8% do total</div></div>
+    <div class="kc g"><div class="kl">Resolvidos</div><div class="kv">1.589</div><div class="ks">99,6% resolução</div></div>
+    <div class="kc r"><div class="kl">SLA Violado</div><div class="kv">64</div><div class="ks">4,0% violação</div></div>
+  </div>
+  <div class="row2">
+    <div class="card"><h3>Divisão por Tipo</h3><div id="ch-tipo"></div></div>
+    <div class="card"><h3>Divisão por Grupo Solucionador</h3><div id="ch-grp-tot"></div></div>
+  </div>
+</div>
+
+<div id="p-grp" class="pg">
+  <div class="ph"><h1>Divisão por Grupo Solucionador</h1><p>Coluna P — Grupo Solucionador</p></div>
+  <div class="row2" style="margin-bottom:20px">
+    <div class="card"><h3>Proporção de Chamados</h3><div id="ch-grp-donut"></div></div>
+    <div class="card"><h3>Detalhamento</h3><div id="grp-detail"></div></div>
+  </div>
+  <div class="row3" id="grp-cards"></div>
+</div>
+
+<div id="p-ana" class="pg">
+  <div class="ph"><h1>Divisão por Analista Responsável</h1><p>Coluna Q — Analista Responsável</p></div>
+  <div class="card"><h3>Proporção de Chamados por Analista (Top 10)</h3><div id="ch-ana-donut"></div></div>
+  <div class="card" style="margin-top:0"><h3>Ranking Completo</h3>
+    <table><thead><tr><th>#</th><th>Analista</th><th>Grupo</th><th>Total</th><th>Incidentes</th><th>Solicitações</th><th>SLA Violado</th></tr></thead>
+    <tbody id="tb-ana"></tbody></table>
+  </div>
+</div>
+
+<div id="p-ofe" class="pg">
+  <div class="ph"><h1>Ofensores — Subcategoria por Grupo</h1><p>Coluna L (Subcategoria) × Coluna P (Grupo Solucionador)</p></div>
+  <div class="card"><h3>Top 15 Subcategorias × Grupo Solucionador</h3><div id="ch-ofe"></div></div>
+  <div class="card" style="margin-top:0"><h3>Detalhe</h3>
+    <table><thead><tr><th>#</th><th>Subcategoria</th><th>Total</th><th>Suporte N2</th><th>Suporte N1</th><th>N3 – Sustentação</th></tr></thead>
+    <tbody id="tb-ofe"></tbody></table>
+  </div>
+</div>
+
+<div id="p-kwd" class="pg">
+  <div class="ph"><h1>Keywords na Descrição</h1><p>Coluna I — chamados contendo as palavras-chave identificadas como ofensores</p></div>
+  <div class="row3" style="margin-bottom:24px" id="kw-cards"></div>
+  <div class="card"><h3>Distribuição por Grupo Solucionador</h3><div id="ch-kwd"></div></div>
+</div>
+
+<div id="p-sol" class="pg">
+  <div class="ph"><h1>Top 10 Usuários Solicitantes</h1><p>Coluna O — Usuário Solicitante</p></div>
+  <div class="row2">
+    <div class="card"><h3>Ranking por Volume</h3><div id="ch-sol"></div></div>
+    <div class="card"><h3>Detalhe</h3>
+      <table><thead><tr><th>#</th><th>Solicitante</th><th>Total</th><th>Inc</th><th>Sol</th><th>SLA</th></tr></thead>
+      <tbody id="tb-sol"></tbody></table>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const D = /*__DATA__*/{};
+
+const PGS=['tot','grp','ana','ofe','kwd','sol'];
+function go(id){
+  PGS.forEach(p=>{document.getElementById('p-'+p).classList.toggle('on',p===id);});
+  document.querySelectorAll('.si').forEach((el,i)=>{el.classList.toggle('on',PGS[i]===id);});
+}
+const CN2='#2563eb',CN1='#7c3aed',CN3='#059669';
+const CINC='#f59e0b',CSOL='#3b82f6',CSLA='#ef4444';
+const PAL=['#2563eb','#7c3aed','#059669','#f59e0b','#ef4444','#0ea5e9','#d97706','#dc2626','#7e22ce','#065f46','#0f766e','#b45309','#9333ea','#0369a1','#15803d'];
+function gColor(g){return g==='Suporte N2'?CN2:g==='Suporte N1'?CN1:CN3;}
+function gBadge(g){
+  if(g==='Suporte N2')return '<span class="bx b2">N2</span>';
+  if(g==='Suporte N1')return '<span class="bx b1">N1</span>';
+  return '<span class="bx b3">N3</span>';
+}
+function mkDonut(id,slices,opts){
+  opts=opts||{};
+  const W=opts.w||480,H=opts.h||260,cx=opts.cx||130,cy=H/2,R=opts.R||100,r=opts.r||58;
+  const total=slices.reduce((a,b)=>a+b.v,0);
+  let angle=-Math.PI/2,paths='';
+  slices.forEach(sl=>{
+    const sweep=(sl.v/total)*2*Math.PI;
+    if(sweep<0.001){angle+=sweep;return;}
+    const ea=angle+sweep;
+    const x1=cx+R*Math.cos(angle),y1=cy+R*Math.sin(angle);
+    const x2=cx+R*Math.cos(ea),y2=cy+R*Math.sin(ea);
+    const ix1=cx+r*Math.cos(angle),iy1=cy+r*Math.sin(angle);
+    const ix2=cx+r*Math.cos(ea),iy2=cy+r*Math.sin(ea);
+    const lg=sweep>Math.PI?1:0;
+    paths+=`<path d="M${ix1.toFixed(1)},${iy1.toFixed(1)} L${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 ${lg},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${ix2.toFixed(1)},${iy2.toFixed(1)} A${r},${r} 0 ${lg},0 ${ix1.toFixed(1)},${iy1.toFixed(1)} Z" fill="${sl.c}" stroke="#fff" stroke-width="2.5"/>`;
+    angle=ea;
+  });
+  const ctv=opts.centerVal||total.toLocaleString('pt-BR'),ctl=opts.centerLbl||'total';
+  const center=`<text x="${cx}" y="${cy-7}" text-anchor="middle" font-size="26" font-weight="900" fill="#0f172a">${ctv}</text><text x="${cx}" y="${cy+13}" text-anchor="middle" font-size="11" fill="#94a3b8">${ctl}</text>`;
+  let legend='';
+  const lx=cx*2+10;
+  slices.forEach((sl,i)=>{
+    const pct=((sl.v/total)*100).toFixed(1),ly=24+i*38;
+    legend+=`<rect x="${lx}" y="${ly}" width="12" height="12" fill="${sl.c}" rx="2"/>`;
+    legend+=`<text x="${lx+17}" y="${ly+11}" font-size="12" fill="#475569">${sl.l}</text>`;
+    legend+=`<text x="${lx+17}" y="${ly+26}" font-size="15" font-weight="800" fill="#0f172a">${sl.v.toLocaleString('pt-BR')} <tspan font-size="11" font-weight="400" fill="#94a3b8">(${pct}%)</tspan></text>`;
+  });
+  document.getElementById(id).innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" width="100%">${paths}${center}${legend}</svg>`;
+}
+function mkHBar(id,items,opts){
+  opts=opts||{};
+  const W=opts.w||560,barH=opts.barH||28,gap=opts.gap||9;
+  const padL=opts.padL||170,padR=opts.padR||80,padT=8,padB=8;
+  const cw=W-padL-padR,maxV=Math.max(...items.map(x=>x.v));
+  const H=(barH+gap)*items.length+padT+padB;
+  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" width="100%">`;
+  items.forEach((it,i)=>{
+    const y=padT+i*(barH+gap),bw=(it.v/maxV)*cw;
+    const lbl=it.l.length>24?it.l.slice(0,23)+'…':it.l;
+    s+=`<rect x="${padL}" y="${y}" width="${cw}" height="${barH}" fill="#f1f5f9" rx="5"/>`;
+    s+=`<rect x="${padL}" y="${y}" width="${bw.toFixed(1)}" height="${barH}" fill="${it.c||CN2}" rx="5"/>`;
+    s+=`<text x="${padL-8}" y="${y+barH/2+5}" text-anchor="end" font-size="12" fill="#475569">${lbl}</text>`;
+    s+=`<text x="${padL+bw+6}" y="${y+barH/2+5}" font-size="13" font-weight="700" fill="#0f172a">${it.v.toLocaleString('pt-BR')}</text>`;
+    if(it.pct) s+=`<text x="${padL+bw+6}" y="${y+barH/2+18}" font-size="10" fill="#94a3b8">${it.pct}%</text>`;
+  });
+  s+='</svg>';
+  document.getElementById(id).innerHTML=s;
+}
+function mkStack(id,labels,datasets,colors,opts){
+  opts=opts||{};
+  const totals=labels.map((_,i)=>datasets.reduce((s,d)=>s+(d.vals[i]||0),0));
+  const maxV=Math.max(...totals);
+  const W=opts.w||700,barH=opts.barH||28,gap=opts.gap||9;
+  const padL=opts.padL||155,padR=opts.padR||80,padT=8,padB=44;
+  const cw=W-padL-padR,H=(barH+gap)*labels.length+padT+padB;
+  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" width="100%">`;
+  labels.forEach((lbl,i)=>{
+    const y=padT+i*(barH+gap);let x=padL;
+    const sl=lbl.length>22?lbl.slice(0,21)+'…':lbl;
+    s+=`<text x="${padL-8}" y="${y+barH/2+5}" text-anchor="end" font-size="12" fill="#475569">${sl}</text>`;
+    s+=`<rect x="${padL}" y="${y}" width="${cw}" height="${barH}" fill="#f1f5f9" rx="5"/>`;
+    datasets.forEach((ds,di)=>{
+      const val=ds.vals[i]||0;if(!val)return;
+      const sw=(val/maxV)*cw;
+      s+=`<rect x="${x.toFixed(1)}" y="${y}" width="${sw.toFixed(1)}" height="${barH}" fill="${colors[di]}"/>`;
+      if(sw>28) s+=`<text x="${(x+sw/2).toFixed(1)}" y="${y+barH/2+5}" text-anchor="middle" font-size="11" font-weight="700" fill="white">${val}</text>`;
+      x+=sw;
+    });
+    s+=`<text x="${(padL+totals[i]/maxV*cw+7).toFixed(1)}" y="${y+barH/2+5}" font-size="12" font-weight="700" fill="#0f172a">${totals[i]}</text>`;
+  });
+  datasets.forEach((ds,i)=>{
+    const lx=padL+i*170,ly=H-padB+14;
+    s+=`<rect x="${lx}" y="${ly}" width="12" height="12" fill="${colors[i]}" rx="2"/>`;
+    s+=`<text x="${lx+16}" y="${ly+11}" font-size="12" fill="#475569">${ds.label}</text>`;
+  });
+  s+='</svg>';
+  document.getElementById(id).innerHTML=s;
+}
+
+window.onload=function(){
+  mkDonut('ch-tipo',[{l:'Incidentes',v:D.inc_total,c:CINC},{l:'Solicitações',v:D.sol_total,c:CSOL}],{w:440,h:200,cx:100,R:82,r:48});
+  mkDonut('ch-grp-tot',D.grupos.map(g=>({l:g.grupo,v:g.total,c:gColor(g.grupo)})),{w:440,h:200,cx:100,R:82,r:48});
+  mkDonut('ch-grp-donut',D.grupos.map(g=>({l:g.grupo,v:g.total,c:gColor(g.grupo)})),{w:480,h:240,cx:120,R:100,r:58});
+
+  let gdet='<table><thead><tr><th>Grupo</th><th>Total</th><th>Inc</th><th>Sol</th><th>SLA Violado</th></tr></thead><tbody>';
+  D.grupos.forEach(g=>{
+    const sp=((g.sla/g.total)*100).toFixed(1);
+    gdet+=`<tr><td>${gBadge(g.grupo)} ${g.grupo}</td><td style="font-weight:700">${g.total.toLocaleString('pt-BR')}</td><td>${g.inc}</td><td>${g.sol}</td><td style="color:${g.sla>0?'#ef4444':'#10b981'};font-weight:700">${g.sla} (${sp}%)</td></tr>`;
+  });
+  document.getElementById('grp-detail').innerHTML=gdet+'</tbody></table>';
+
+  document.getElementById('grp-cards').innerHTML=D.grupos.map(g=>{
+    const tc=g.grupo==='Suporte N1'?'n1':g.grupo==='N3 - Sustentação'?'n3':'';
+    const sp=((g.sla/g.total)*100).toFixed(1),pct=((g.total/D.total)*100).toFixed(1);
+    return `<div class="gc ${tc}"><h4>${g.grupo}</h4>
+      <div class="gstat"><span>% do total</span><span style="color:${gColor(g.grupo)}">${pct}%</span></div>
+      <div class="gstat"><span>Total chamados</span><span>${g.total.toLocaleString('pt-BR')}</span></div>
+      <div class="gstat"><span>Incidentes</span><span>${g.inc}</span></div>
+      <div class="gstat"><span>Solicitações</span><span>${g.sol}</span></div>
+      <div class="gstat"><span>SLA Violado</span><span style="color:#ef4444">${g.sla} (${sp}%)</span></div></div>`;
+  }).join('');
+
+  const top10=D.analistas.slice(0,10),outrosT=D.analistas.slice(10).reduce((s,a)=>s+a.total,0);
+  const ds=top10.map((a,i)=>({l:a.analista==='none'?'N/A':a.analista.split(' ')[0]+' '+a.analista.split(' ').slice(-1)[0],v:a.total,c:PAL[i]}));
+  if(outrosT>0)ds.push({l:'Outros',v:outrosT,c:'#cbd5e1'});
+  mkDonut('ch-ana-donut',ds,{w:560,h:320,cx:130,R:110,r:62});
+
+  document.getElementById('tb-ana').innerHTML=D.analistas.map((a,i)=>{
+    const nm=a.analista==='none'?'Não atribuído':a.analista,sp=a.total>0?((a.sla/a.total)*100).toFixed(1):'0.0';
+    return `<tr><td style="color:#94a3b8;font-size:12px">${i+1}</td><td style="font-weight:600">${nm}</td><td>${gBadge(a.grupo)}</td><td style="font-weight:700">${a.total}</td><td>${a.inc}</td><td>${a.sol}</td><td style="color:${a.sla>0?'#ef4444':'#10b981'};font-weight:600">${a.sla} (${sp}%)</td></tr>`;
+  }).join('');
+
+  const g3=['Suporte N2','Suporte N1','N3 - Sustentação'];
+  mkStack('ch-ofe',D.subcat_matrix.map(s=>s.sub),g3.map(g=>({label:g,vals:D.subcat_matrix.map(s=>s.por_grupo[g]||0)})),[CN2,CN1,CN3],{w:730,barH:28,padL:165,padR:80});
+  document.getElementById('tb-ofe').innerHTML=D.subcat_matrix.map((s,i)=>
+    `<tr><td style="color:#94a3b8;font-size:12px">${i+1}</td><td style="font-weight:600">${s.sub}</td><td style="font-weight:700">${s.total}</td><td style="color:${CN2};font-weight:600">${s.por_grupo['Suporte N2']||0}</td><td style="color:${CN1};font-weight:600">${s.por_grupo['Suporte N1']||0}</td><td style="color:${CN3};font-weight:600">${s.por_grupo['N3 - Sustentação']||0}</td></tr>`
+  ).join('');
+
+  const kwC=['#2563eb','#d97706','#059669'],kwBg=['#eff6ff','#fffbeb','#f0fdf4'];
+  document.getElementById('kw-cards').innerHTML=D.keywords.map((kw,i)=>{
+    const pct=((kw.total/D.total)*100).toFixed(1);
+    return `<div class="kwcard" style="border-top-color:${kwC[i]};background:${kwBg[i]}">
+      <div class="kwl" style="color:${kwC[i]}">${kw.keyword}</div>
+      <div class="kwn" style="color:${kwC[i]}">${kw.total}</div>
+      <div class="kwp">chamados (${pct}% do total)</div>
+      <div style="margin-top:10px;font-size:11px;color:#64748b">N2: ${kw.por_grupo['Suporte N2']||0} &nbsp;|&nbsp; N1: ${kw.por_grupo['Suporte N1']||0} &nbsp;|&nbsp; N3: ${kw.por_grupo['N3 - Sustentação']||0}</div>
+    </div>`;
+  }).join('');
+  mkStack('ch-kwd',D.keywords.map(k=>k.keyword),g3.map(g=>({label:g,vals:D.keywords.map(k=>k.por_grupo[g]||0)})),[CN2,CN1,CN3],{w:700,barH:36,padL:180,padR:80});
+
+  mkHBar('ch-sol',D.top_solicitantes.map((s,i)=>({l:s.solicitante,v:s.total,c:PAL[i%PAL.length],pct:((s.total/D.total)*100).toFixed(1)})),{w:500,barH:30,padL:190,padR:90});
+  document.getElementById('tb-sol').innerHTML=D.top_solicitantes.map((s,i)=>
+    `<tr><td style="color:#94a3b8;font-size:12px">${i+1}</td><td style="font-weight:600">${s.solicitante}</td><td style="font-weight:700">${s.total}</td><td>${s.inc}</td><td>${s.sol_count}</td><td style="color:${s.sla>0?'#ef4444':'#10b981'};font-weight:600">${s.sla}</td></tr>`
+  ).join('');
+};
+</script>
+
+<div style="position:fixed;bottom:0;left:220px;right:0;background:#fff;border-top:1px solid #e2e8f0;padding:7px 36px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;align-items:center;z-index:5">
+  <span>Book – Operações de TI &nbsp;·&nbsp; Gerado automaticamente via Cowork</span>
+  <span style="font-weight:600;color:#475569">📅 __GERADO_EM__</span>
+</div>
+</body>
+</html>
