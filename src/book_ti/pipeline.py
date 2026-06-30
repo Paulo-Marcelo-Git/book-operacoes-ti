@@ -55,6 +55,11 @@ def run(no_email: bool = False, no_telegram: bool = False, arquivo: str | None =
         log.info("==== rodada concluída ====")
         return html_path
 
+    except FileNotFoundError as exc:
+        # inbox vazia: condição esperada quando o arquivo ainda não foi depositado.
+        # Não loga traceback nem aciona Telegram — o scheduler trata retry e notifica só no esgotamento.
+        log.warning("inbox/ vazia na etapa '%s': %s", etapa, exc)
+        raise
     except Exception as exc:
         log.exception("FALHA na etapa: %s", etapa)
         if not no_telegram:

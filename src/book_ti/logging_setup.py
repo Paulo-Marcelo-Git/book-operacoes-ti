@@ -20,8 +20,10 @@ def get_logger(name: str = "book_ti") -> logging.Logger:
     logger.setLevel(logging.DEBUG)
     fmt = logging.Formatter(_FMT)
 
+    import os
+    console_level = logging.DEBUG if os.getenv("LOG_LEVEL", "").upper() == "DEBUG" else logging.INFO
     console = logging.StreamHandler(sys.stdout)
-    console.setLevel(logging.INFO)
+    console.setLevel(console_level)
     console.setFormatter(fmt)
 
     arquivo = logging.FileHandler(current_log_path(), encoding="utf-8")

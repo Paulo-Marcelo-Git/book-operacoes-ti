@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Raiz do repositório: este arquivo está em src/book_ti/config.py -> sobe 3 níveis.
 BASE_DIR = Path(__file__).resolve().parents[2]
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=True)
 
 # ------------------------------------------------------------------ Inbox local
 INBOX_DIR = BASE_DIR / os.getenv("INBOX_DIR", "inbox")
