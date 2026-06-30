@@ -1,10 +1,10 @@
 # Book Operações de TI
 
-Pipeline diário que baixa a planilha de chamados do Google Drive, gera um **book
+Pipeline diário que lê uma planilha de chamados da pasta `inbox/`, gera um **book
 HTML interativo** (dashboard) e o envia por **e-mail**, com **alertas no Telegram**
 a cada execução (sucesso/erro).
 
-Visão de arquitetura completa: ver [`CLAUDE.md`](CLAUDE.md).
+Arquitetura completa: ver [`CLAUDE.md`](CLAUDE.md).
 
 ---
 
@@ -15,35 +15,42 @@ python -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-cp .env.example .env                 # e preencha os valores
+cp .env.example .env                 # preencha os valores
 ```
 
-No `.env`, preencha em especial:
+No `.env`, configure em especial:
 - `EMAIL_PASS` — App Password de 16 dígitos do Gmail (não a senha da conta).
-- `TELEGRAM_TOKEN` — token do @BotFather.
-- `GDRIVE_SA_JSON` — coloque o `service_account.json` em `config/`.
+- `TELEGRAM_TOKEN` — token do @BotFather (opcional; deixe em branco para desativar alertas).
 
-A **pasta do Drive precisa estar compartilhada** com o e-mail da service account
-(acesso de leitor).
+---
+
+## Fluxo de dados
+
+```
+08:00 — depositar *.xlsx em inbox/
+09:00 — scheduler dispara pipeline
+         inbox/ → transform → book HTML → e-mail → inbox/processados/
+                                                  → alerta Telegram
+```
 
 ---
 
 ## Como rodar
 
 ```bash
-# rodada completa agora (Drive -> book -> e-mail -> alerta Telegram)
+# rodada completa agora
 python run.py
 
 # gerar o book local sem enviar nada (ótimo para testar)
 python run.py --no-email --no-telegram
 
-# usar um xlsx local em vez do Drive
+# usar um xlsx específico em vez do mais recente em inbox/
 python run.py --arquivo caminho/da/planilha.xlsx
 
-# só validar o transform (KPIs no terminal)
+# validar só o transform (KPIs no terminal)
 python -m src.book_ti.transform --arquivo tests/fixtures/sample.xlsx --dry-run
 
-# testar só o alerta do Telegram
+# testar só o alerta Telegram
 python -c "from src.book_ti import notifier; notifier.send('teste ✅')"
 
 # rodar os testes
@@ -51,26 +58,36 @@ pytest -q
 ```
 
 ### Agendamento diário (09:00)
-- **Residente:** `python -m src.book_ti.scheduler`
-- **Cron (WSL/Linux):**
-  ```
-  0 9 * * * cd /caminho/book-operacoes-ti && /caminho/.venv/bin/python run.py >> logs/cron.log 2>&1
-  ```
+
+```bash
+# modo residente (APScheduler)
+python -m src.book_ti.scheduler
+
+# modo watcher (processa qualquer .xlsx que aparecer em inbox/)
+python run.py --watch
+```
+
+**Cron WSL/Linux:**
+```
+0 9 * * * cd /caminho/book-operacoes-ti && /caminho/.venv/bin/python run.py >> logs/cron.log 2>&1
+```
 
 ---
 
-## 🔒 Segurança — antes do primeiro `git push`
+## Personalização
 
-Os segredos **nunca** vão para o repositório. Tudo fica no `.env` (ignorado pelo git).
+- **Keywords monitoradas**: edite `KEYWORDS` em `src/book_ti/transform.py`.
+- **Colunas da planilha**: edite `COLUNAS` em `src/book_ti/config.py` (mapeamento letra → campo).
+- **Horário de execução**: `SCHEDULE_HOUR` / `SCHEDULE_MINUTE` no `.env`.
 
-Checklist:
-1. Confirme que o `.env`, o `service_account.json` e os `.xlsx` **não** aparecem:
-   ```bash
-   git status            # nada de .env / *.xlsx / service_account.json
-   git check-ignore .env config/service_account.json   # deve listar os dois
-   ```
-2. O `TELEGRAM_TOKEN` foi exposto durante o desenvolvimento — **revogue no @BotFather**
-   (`/revoke`) e gere um novo, usando-o apenas no `.env` local.
-3. O book gerado (`output/`) contém nomes reais e também é ignorado pelo git.
+---
 
-Só o `.env.example` (placeholders) vai para o repositório.
+## Segurança
+
+Os segredos ficam **apenas no `.env`** (ignorado pelo git). Nunca commitar `.env`.
+
+```bash
+# confirme que o .env não aparece no git
+git check-ignore .env     # deve listar o arquivo
+git status                # .env não deve aparecer
+```

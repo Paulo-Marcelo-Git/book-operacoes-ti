@@ -18,12 +18,13 @@ GRUPO_VAZIO = "Não atribuído"
 ANALISTA_VAZIO = "none"
 SUBCAT_VAZIA = "Outros"
 
-# Atenção às regras: NF e Estoque casam por substring; "Pedido" é PALAVRA EXATA
-# (\bpedido\b) e NÃO casa "pedidos". Foi assim que o mock foi gerado. Não unificar.
+# Adapte estes termos conforme os recorrentes nas descrições de chamado da sua operação.
+# Regras independentes: substring simples (r"termo") ou palavra exata (r"\btermo\b").
+# Palavra exata NÃO casa plurais — não unifique padrões com comportamentos diferentes.
 KEYWORDS = [
-    ("Nota Fiscal / NF", r"nota\s*fiscal|\bnf\b"),
-    ("Estoque",          r"estoque"),
-    ("Pedido",           r"\bpedido\b"),
+    ("Categoria A", r"categoria_a|\bca\b"),
+    ("Categoria B", r"categoria_b"),
+    ("Categoria C", r"\bcategoria_c\b"),
 ]
 
 

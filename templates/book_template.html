@@ -73,11 +73,11 @@ svg text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-ser
 <div id="p-tot" class="pg on">
   <div class="ph"><h1>Total de Chamados</h1><p>Visão consolidada da operação</p></div>
   <div class="krow">
-    <div class="kc b"><div class="kl">Total Chamados</div><div class="kv">1.595</div><div class="ks">todos os registros</div></div>
-    <div class="kc a"><div class="kl">Incidentes</div><div class="kv">1.248</div><div class="ks">78,2% do total</div></div>
-    <div class="kc i"><div class="kl">Solicitações</div><div class="kv">347</div><div class="ks">21,8% do total</div></div>
-    <div class="kc g"><div class="kl">Resolvidos</div><div class="kv">1.589</div><div class="ks">99,6% resolução</div></div>
-    <div class="kc r"><div class="kl">SLA Violado</div><div class="kv">64</div><div class="ks">4,0% violação</div></div>
+    <div class="kc b"><div class="kl">Total Chamados</div><div class="kv" id="kv-tot">—</div><div class="ks">todos os registros</div></div>
+    <div class="kc a"><div class="kl">Incidentes</div><div class="kv" id="kv-inc">—</div><div class="ks" id="ks-inc"></div></div>
+    <div class="kc i"><div class="kl">Solicitações</div><div class="kv" id="kv-sol">—</div><div class="ks" id="ks-sol"></div></div>
+    <div class="kc g"><div class="kl">Resolvidos</div><div class="kv" id="kv-res">—</div><div class="ks" id="ks-res"></div></div>
+    <div class="kc r"><div class="kl">SLA Violado</div><div class="kv" id="kv-sla">—</div><div class="ks" id="ks-sla"></div></div>
   </div>
   <div class="row2">
     <div class="card"><h3>Divisão por Tipo</h3><div id="ch-tipo"></div></div>
@@ -107,7 +107,7 @@ svg text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-ser
   <div class="ph"><h1>Ofensores — Subcategoria por Grupo</h1><p>Coluna L (Subcategoria) × Coluna P (Grupo Solucionador)</p></div>
   <div class="card"><h3>Top 15 Subcategorias × Grupo Solucionador</h3><div id="ch-ofe"></div></div>
   <div class="card" style="margin-top:0"><h3>Detalhe</h3>
-    <table><thead><tr><th>#</th><th>Subcategoria</th><th>Total</th><th>Suporte N2</th><th>Suporte N1</th><th>N3 – Sustentação</th></tr></thead>
+    <table><thead><tr id="ofe-thead"><th>#</th><th>Subcategoria</th><th>Total</th></tr></thead>
     <tbody id="tb-ofe"></tbody></table>
   </div>
 </div>
@@ -139,15 +139,13 @@ function go(id){
   PGS.forEach(p=>{document.getElementById('p-'+p).classList.toggle('on',p===id);});
   document.querySelectorAll('.si').forEach((el,i)=>{el.classList.toggle('on',PGS[i]===id);});
 }
-const CN2='#2563eb',CN1='#7c3aed',CN3='#059669';
 const CINC='#f59e0b',CSOL='#3b82f6',CSLA='#ef4444';
 const PAL=['#2563eb','#7c3aed','#059669','#f59e0b','#ef4444','#0ea5e9','#d97706','#dc2626','#7e22ce','#065f46','#0f766e','#b45309','#9333ea','#0369a1','#15803d'];
-function gColor(g){return g==='Suporte N2'?CN2:g==='Suporte N1'?CN1:CN3;}
-function gBadge(g){
-  if(g==='Suporte N2')return '<span class="bx b2">N2</span>';
-  if(g==='Suporte N1')return '<span class="bx b1">N1</span>';
-  return '<span class="bx b3">N3</span>';
-}
+const _GPAL=['#2563eb','#7c3aed','#059669','#f59e0b','#0ea5e9','#d97706'];
+const _gmap={};
+function _gi(g){if(!(_gmap[g]>=0)){_gmap[g]=Object.keys(_gmap).length;}return _gmap[g];}
+function gColor(g){return _GPAL[_gi(g)%_GPAL.length];}
+function gBadge(g){const cls=['b2','b1','b3'][_gi(g)%3];return `<span class="bx ${cls}">${g}</span>`;}
 function mkDonut(id,slices,opts){
   opts=opts||{};
   const W=opts.w||480,H=opts.h||260,cx=opts.cx||130,cy=H/2,R=opts.R||100,r=opts.r||58;
@@ -188,7 +186,7 @@ function mkHBar(id,items,opts){
     const y=padT+i*(barH+gap),bw=(it.v/maxV)*cw;
     const lbl=it.l.length>24?it.l.slice(0,23)+'…':it.l;
     s+=`<rect x="${padL}" y="${y}" width="${cw}" height="${barH}" fill="#f1f5f9" rx="5"/>`;
-    s+=`<rect x="${padL}" y="${y}" width="${bw.toFixed(1)}" height="${barH}" fill="${it.c||CN2}" rx="5"/>`;
+    s+=`<rect x="${padL}" y="${y}" width="${bw.toFixed(1)}" height="${barH}" fill="${it.c||'#2563eb'}" rx="5"/>`;
     s+=`<text x="${padL-8}" y="${y+barH/2+5}" text-anchor="end" font-size="12" fill="#475569">${lbl}</text>`;
     s+=`<text x="${padL+bw+6}" y="${y+barH/2+5}" font-size="13" font-weight="700" fill="#0f172a">${it.v.toLocaleString('pt-BR')}</text>`;
     if(it.pct) s+=`<text x="${padL+bw+6}" y="${y+barH/2+18}" font-size="10" fill="#94a3b8">${it.pct}%</text>`;
@@ -228,6 +226,15 @@ function mkStack(id,labels,datasets,colors,opts){
 }
 
 window.onload=function(){
+  document.getElementById('kv-tot').textContent=D.total.toLocaleString('pt-BR');
+  document.getElementById('kv-inc').textContent=D.inc_total.toLocaleString('pt-BR');
+  document.getElementById('ks-inc').textContent=((D.inc_total/D.total)*100).toFixed(1)+'% do total';
+  document.getElementById('kv-sol').textContent=D.sol_total.toLocaleString('pt-BR');
+  document.getElementById('ks-sol').textContent=((D.sol_total/D.total)*100).toFixed(1)+'% do total';
+  document.getElementById('kv-res').textContent=D.res_total.toLocaleString('pt-BR');
+  document.getElementById('ks-res').textContent=((D.res_total/D.total)*100).toFixed(1)+'% resolução';
+  document.getElementById('kv-sla').textContent=D.sla_total.toLocaleString('pt-BR');
+  document.getElementById('ks-sla').textContent=((D.sla_total/D.total)*100).toFixed(1)+'% violação';
   mkDonut('ch-tipo',[{l:'Incidentes',v:D.inc_total,c:CINC},{l:'Solicitações',v:D.sol_total,c:CSOL}],{w:440,h:200,cx:100,R:82,r:48});
   mkDonut('ch-grp-tot',D.grupos.map(g=>({l:g.grupo,v:g.total,c:gColor(g.grupo)})),{w:440,h:200,cx:100,R:82,r:48});
   mkDonut('ch-grp-donut',D.grupos.map(g=>({l:g.grupo,v:g.total,c:gColor(g.grupo)})),{w:480,h:240,cx:120,R:100,r:58});
@@ -240,7 +247,7 @@ window.onload=function(){
   document.getElementById('grp-detail').innerHTML=gdet+'</tbody></table>';
 
   document.getElementById('grp-cards').innerHTML=D.grupos.map(g=>{
-    const tc=g.grupo==='Suporte N1'?'n1':g.grupo==='N3 - Sustentação'?'n3':'';
+    const tc=['','n1','n3'][_gi(g.grupo)%3]||'';
     const sp=((g.sla/g.total)*100).toFixed(1),pct=((g.total/D.total)*100).toFixed(1);
     return `<div class="gc ${tc}"><h4>${g.grupo}</h4>
       <div class="gstat"><span>% do total</span><span style="color:${gColor(g.grupo)}">${pct}%</span></div>
@@ -260,10 +267,11 @@ window.onload=function(){
     return `<tr><td style="color:#94a3b8;font-size:12px">${i+1}</td><td style="font-weight:600">${nm}</td><td>${gBadge(a.grupo)}</td><td style="font-weight:700">${a.total}</td><td>${a.inc}</td><td>${a.sol}</td><td style="color:${a.sla>0?'#ef4444':'#10b981'};font-weight:600">${a.sla} (${sp}%)</td></tr>`;
   }).join('');
 
-  const g3=['Suporte N2','Suporte N1','N3 - Sustentação'];
-  mkStack('ch-ofe',D.subcat_matrix.map(s=>s.sub),g3.map(g=>({label:g,vals:D.subcat_matrix.map(s=>s.por_grupo[g]||0)})),[CN2,CN1,CN3],{w:730,barH:28,padL:165,padR:80});
+  const g3=D.grupos_list;
+  mkStack('ch-ofe',D.subcat_matrix.map(s=>s.sub),g3.map(g=>({label:g,vals:D.subcat_matrix.map(s=>s.por_grupo[g]||0)})),g3.map((_,i)=>_GPAL[i%_GPAL.length]),{w:730,barH:28,padL:165,padR:80});
+  document.getElementById('ofe-thead').innerHTML='<th>#</th><th>Subcategoria</th><th>Total</th>'+g3.map(g=>`<th>${g}</th>`).join('');
   document.getElementById('tb-ofe').innerHTML=D.subcat_matrix.map((s,i)=>
-    `<tr><td style="color:#94a3b8;font-size:12px">${i+1}</td><td style="font-weight:600">${s.sub}</td><td style="font-weight:700">${s.total}</td><td style="color:${CN2};font-weight:600">${s.por_grupo['Suporte N2']||0}</td><td style="color:${CN1};font-weight:600">${s.por_grupo['Suporte N1']||0}</td><td style="color:${CN3};font-weight:600">${s.por_grupo['N3 - Sustentação']||0}</td></tr>`
+    `<tr><td style="color:#94a3b8;font-size:12px">${i+1}</td><td style="font-weight:600">${s.sub}</td><td style="font-weight:700">${s.total}</td>${g3.map((g,gi)=>`<td style="color:${_GPAL[gi%_GPAL.length]};font-weight:600">${s.por_grupo[g]||0}</td>`).join('')}</tr>`
   ).join('');
 
   const kwC=['#2563eb','#d97706','#059669'],kwBg=['#eff6ff','#fffbeb','#f0fdf4'];
@@ -273,10 +281,10 @@ window.onload=function(){
       <div class="kwl" style="color:${kwC[i]}">${kw.keyword}</div>
       <div class="kwn" style="color:${kwC[i]}">${kw.total}</div>
       <div class="kwp">chamados (${pct}% do total)</div>
-      <div style="margin-top:10px;font-size:11px;color:#64748b">N2: ${kw.por_grupo['Suporte N2']||0} &nbsp;|&nbsp; N1: ${kw.por_grupo['Suporte N1']||0} &nbsp;|&nbsp; N3: ${kw.por_grupo['N3 - Sustentação']||0}</div>
+      <div style="margin-top:10px;font-size:11px;color:#64748b">${g3.map(g=>`${g}: ${kw.por_grupo[g]||0}`).join(' &nbsp;|&nbsp; ')}</div>
     </div>`;
   }).join('');
-  mkStack('ch-kwd',D.keywords.map(k=>k.keyword),g3.map(g=>({label:g,vals:D.keywords.map(k=>k.por_grupo[g]||0)})),[CN2,CN1,CN3],{w:700,barH:36,padL:180,padR:80});
+  mkStack('ch-kwd',D.keywords.map(k=>k.keyword),g3.map(g=>({label:g,vals:D.keywords.map(k=>k.por_grupo[g]||0)})),g3.map((_,i)=>_GPAL[i%_GPAL.length]),{w:700,barH:36,padL:180,padR:80});
 
   mkHBar('ch-sol',D.top_solicitantes.map((s,i)=>({l:s.solicitante,v:s.total,c:PAL[i%PAL.length],pct:((s.total/D.total)*100).toFixed(1)})),{w:500,barH:30,padL:190,padR:90});
   document.getElementById('tb-sol').innerHTML=D.top_solicitantes.map((s,i)=>
@@ -286,7 +294,7 @@ window.onload=function(){
 </script>
 
 <div style="position:fixed;bottom:0;left:220px;right:0;background:#fff;border-top:1px solid #e2e8f0;padding:7px 36px;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;align-items:center;z-index:5">
-  <span>Book – Operações de TI &nbsp;·&nbsp; Gerado automaticamente via Cowork</span>
+  <span>Book – Operações de TI &nbsp;·&nbsp; Gerado automaticamente</span>
   <span style="font-weight:600;color:#475569">📅 __GERADO_EM__</span>
 </div>
 </body>

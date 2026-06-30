@@ -14,19 +14,19 @@ Aplicação Python que **todos os dias às 09:00**:
 3. Injeta esses dados em um **template HTML** (o "Book", já desenhado) gerando um dashboard interativo;
 4. **Envia por e-mail** um resumo KPI (corpo) + o Book completo (anexo).
 
-Stack alinhado ao padrão já usado no FlowETL: `pandas`, `APScheduler`, logging *double-sink* (console + arquivo).
+Stack: `pandas`, `APScheduler`, logging *double-sink* (console + arquivo).
 
 ---
 
 ## 2. Decisões de arquitetura (importante ler antes de codar)
 
 ### 2.1. O anexo recebido é o ALVO, não a origem
-O arquivo `Book___Operações_de_TI.html` é o **dashboard renderizado** (mock). Ele define:
+O arquivo `book_dashboard.html` é o **dashboard renderizado** (mock). Ele define:
 - O **layout** (6 páginas: Total, Grupo, Analista, Ofensores, Keywords, Solicitantes);
 - O **objeto de dados `D`** que o Python precisa produzir (schema na seção 5).
 
-Ele **não** é a planilha de origem. A origem real (`Operações_de_TI_-_GERAL_Áreas_*.xlsx`) já foi
-localizada e inspecionada na pasta do Drive — schema, colunas e números-alvo confirmados (seções 5–7).
+Ele **não** é a planilha de origem. A planilha de origem (ex.: `Chamados_TI_*.xlsx`) é
+depositada em `inbox/` — schema, colunas e números-alvo confirmados (seções 5–7).
 
 ### 2.2. Gráficos em `<script>` NÃO renderizam dentro de e-mail
 O Book monta SVG via JavaScript no `window.onload`. Outlook/Gmail **removem `<script>`**. Portanto:
@@ -47,7 +47,7 @@ O template tem muito JavaScript com `{` e `}`. Usar Jinja exigiria escapar tudo.
 - No Python: `template.replace("/*__DATA__*/{}", json.dumps(D, ensure_ascii=False))`
 
 ### 2.5. Agendamento: dois modos
-- **APScheduler** (`BlockingScheduler` + `CronTrigger hour=9 minute=0`) — processo residente, igual ao FlowETL.
+- **APScheduler** (`BlockingScheduler` + `CronTrigger hour=9 minute=0`) — processo residente.
 - **One-shot + cron do sistema** (WSL: `crontab`; Windows: Agendador de Tarefas) — mais simples e resiliente para um job 1x/dia.
 
 O entrypoint `run.py` executa **uma rodada** (one-shot). O `scheduler.py` só envelopa o `run.py` no horário. Assim qualquer um dos dois modos funciona sem reescrever a lógica.
@@ -101,7 +101,7 @@ book-operacoes-ti/
 ├── tests/
 │   ├── test_transform.py      # valida agregações com fixture
 │   └── fixtures/
-│       └── sample.xlsx        # amostra real (baixar do Drive 1x para os testes)
+│       └── sample.xlsx        # amostra local (colocar manualmente em tests/fixtures/ para rodar os testes)
 └── run.py                     # entrypoint one-shot: roda 1 pipeline e sai
 ```
 
@@ -111,8 +111,7 @@ book-operacoes-ti/
 
 ## 5. Mapeamento de colunas (planilha → campos) — ✅ CONFIRMADO
 
-Validado contra a planilha real `Operações_de_TI_-_GERAL_Áreas_*.xlsx` (1.595 linhas, 18 colunas,
-`header=0`). Header completo (letra / índice pandas / nome real):
+Validado contra a planilha real (18 colunas, `header=0`). Header completo (letra / índice pandas / nome real):
 
 | Letra | Índice | Nome real do header | Usado para |
 |---|---|---|---|
@@ -124,7 +123,7 @@ Validado contra a planilha real `Operações_de_TI_-_GERAL_Áreas_*.xlsx` (1.595
 | F | 5 | `Reabrir contador` | — |
 | G | 6 | `Data de conclusão` | — |
 | **H** | 7 | `Tipo de Registro de Serviço` | **Tipo** (`Incidente` / `Solicitação`) |
-| **I** | 8 | `Descrição` | **Keywords** (NF, Estoque, Pedido) |
+| **I** | 8 | `Descrição` | **Keywords** (configuráveis em `transform.py`) |
 | **J** | 9 | `Legenda` | **Status** (`== 'Resolvido'`) |
 | K | 10 | `Categoria` | — |
 | **L** | 11 | `Subcategoria` | **Ofensores** |
@@ -138,11 +137,9 @@ Validado contra a planilha real `Operações_de_TI_-_GERAL_Áreas_*.xlsx` (1.595
 > O mapeamento fica em `config.py` lendo por **letra** (robusto a mudança de ordem). Atenção: a coluna **B é vazia** (`Unnamed: 1`) — por isso o acesso posicional/por letra é mais seguro que por nome.
 
 ### Valores distintos confirmados (define a lógica do transform)
-- **E `Sla Violado.`**: `Sim` (64) ou vazio/NaN (1.531). → SLA violado quando `== 'Sim'`.
-- **H `Tipo de Registro de Serviço`**: `Incidente` (1.248), `Solicitação` (347).
-- **J `Legenda`**: `Resolvido` (1.589), `Cancelar` (4), `Mesclagem fechada` (1), `Reopened by End User` (1). → "Resolvidos" = `== 'Resolvido'`.
-
-Todos batem exatamente com os KPIs do mock (Inc 1.248 / Sol 347 / SLA 64 / Resolvido 1.589 / Total 1.595).
+- **E `Sla Violado.`**: `Sim` ou vazio/NaN. → SLA violado quando `== 'Sim'`.
+- **H `Tipo de Registro de Serviço`**: `Incidente` ou `Solicitação`.
+- **J `Legenda`**: `Resolvido`, `Cancelar`, `Mesclagem fechada`, `Reopened by End User`. → "Resolvidos" = `== 'Resolvido'`.
 
 ---
 
@@ -172,10 +169,10 @@ D = {
 
   "grupos_list": [str, ...],          # lista distinta de grupos (Coluna P)
 
-  "keywords": [             # busca na Coluna I, quebrado por Coluna P
-    {"keyword": "Nota Fiscal / NF", "total": int, "por_grupo": {...}},
-    {"keyword": "Estoque",          "total": int, "por_grupo": {...}},
-    {"keyword": "Pedido",           "total": int, "por_grupo": {...}}
+  "keywords": [             # busca na Coluna I, quebrado por Coluna P — nomes definidos em transform.py::KEYWORDS
+    {"keyword": "Categoria A", "total": int, "por_grupo": {...}},
+    {"keyword": "Categoria B", "total": int, "por_grupo": {...}},
+    {"keyword": "Categoria C", "total": int, "por_grupo": {...}}
   ],
 
   "top_solicitantes": [     # group by Coluna O, top 10 por total
@@ -201,12 +198,11 @@ D = {
 6. analistas       = df.groupby(col_Q) (+ grupo predominante) -> ordenar total desc
 7. subcat_matrix   = df.groupby([col_L, col_P]) -> pivot -> top 15 por total
 8. keywords        = para cada bucket, aplicar regex sobre col_I NORMALIZADA
-                     (NFKD + remover acentos + lower), e quebrar por col_P:
-       - "Nota Fiscal / NF": r"nota\s*fiscal|\bnf\b"   -> 101  (substring)
-       - "Estoque":          r"estoque"                -> 35   (substring)
-       - "Pedido":           r"\bpedido\b"             -> 167  (PALAVRA EXATA, singular)
-     ⚠ "Pedido" usa \b...\b e NÃO casa "pedidos" (plural). Foi assim que o mock foi gerado.
-        NF e Estoque casam por substring. Não unifique as três regras.
+                     (NFKD + remover acentos + lower), e quebrar por col_P.
+       Cada keyword tem nome e padrão regex configuráveis em `transform.py::KEYWORDS`.
+       Exemplos de padrão: substring simples (`r"termo"`) ou palavra exata (`r"\btermo\b"`).
+     ⚠ Casamento exato (`\b...\b`) NÃO casa plurais. Não unifique regras com comportamentos
+        diferentes (substring vs. palavra exata).
      (Buckets independentes; um chamado pode contar em mais de uma keyword.)
 9. top_solicitantes= df.groupby(col_O) -> top 10 por total (+ is_inc/is_sla/sol_count)
 ```
@@ -214,10 +210,10 @@ D = {
 Normalização de acentos para keywords: `unicodedata.normalize('NFKD', s)`, remover combining
 chars, `str.lower()` antes do regex.
 
-### Números-alvo para o teste (devem bater exatamente)
-`test_transform.py` deve afirmar contra a planilha real:
-`total=1595, inc_total=1248, sol_total=347, sla_total=64, res_total=1589`,
-`keywords: NF=101 (N2:74,N3:18,N1:9), Estoque=35 (N2:23,N3:10,N1:2), Pedido=167 (N2:123,N1:27,N3:17)`.
+### Validação do teste
+`test_transform.py` afirma integridade estrutural e consistência dos KPIs (ex.: `inc + sol == total`)
+contra a planilha em `tests/fixtures/sample.xlsx`. Os testes são pulados automaticamente se o
+arquivo não estiver presente (dados reais não versionados).
 
 ---
 
@@ -250,7 +246,7 @@ chars, `str.lower()` antes do regex.
    ⚠ EMAIL_PASS é uma App Password do Gmail (16 dígitos), não a senha da conta.
 ```
 
-Variáveis (`.env`, convenção `EMAIL_*` — mesma do FlowETL): `EMAIL_USER`, `EMAIL_PASS`,
+Variáveis (`.env`, convenção `EMAIL_*`): `EMAIL_USER`, `EMAIL_PASS`,
 `EMAIL_DESTINATARIO` (split por vírgula -> lista de destinatários), `EMAIL_SMTP`, `EMAIL_PORTA`,
 `EMAIL_ASSUNTO_PREFIXO`. Assunto sugerido: `Book Operações de TI — {data}`.
 
@@ -312,7 +308,7 @@ Rastrear `etapa_atual` numa variável para o alerta de erro dizer **onde** quebr
 # Inbox local
 INBOX_DIR=inbox
 
-# Email (Gmail — reaproveitando a conta do FlowETL)
+# Email (Gmail — configurar no .env)
 EMAIL_USER=seu_bot@gmail.com
 EMAIL_PASS=                                   # App Password de 16 dígitos (preencher local; NUNCA commitar)
 EMAIL_DESTINATARIO=destino@exemplo.com      # aceita lista separada por vírgula
@@ -349,13 +345,11 @@ COLUNAS = {
 
 ## 11. Pendências / Perguntas a confirmar
 
-✅ **Resolvidas** (via inspeção da planilha real): schema/headers, mapeamento das colunas E/H/J,
-nome/padrão do arquivo no Drive, e os números-alvo de validação.
+✅ **Resolvidas**: schema/headers, mapeamento das colunas E/H/J e números-alvo de validação.
 
 Ainda em aberto:
 
-1. ~~Servidor SMTP~~ ✅ Resolvido: Gmail (`seu_bot@gmail.com`) reaproveitado do FlowETL, com
-   App Password já existente. Falta só preencher `EMAIL_PASS` no `.env` local.
+1. ~~Servidor SMTP~~ ✅ Resolvido: Gmail via App Password (configurar `EMAIL_PASS` no `.env`).
 2. **Host/fuso do agendamento**: o WSL precisa estar ligado às 09:00. Se a máquina costuma ficar
    desligada, considerar servidor dedicado ou Agendador de Tarefas do Windows.
 3. **Janela de dados**: a planilha é sempre um *snapshot* completo (acumulado) ou já vem filtrada por
@@ -366,7 +360,7 @@ Ainda em aberto:
 ## 12. Roadmap de implementação
 
 - **Fase 0 — Setup**: estrutura de pastas, `requirements.txt`, `.env.example`, `logging_setup.py`, preparar `book_template.html` com o marcador.
-- **Fase 1 — Transform offline**: com a amostra `.xlsx`, implementar `transform.py` + `test_transform.py`. Render local e abrir no navegador. (Sem Drive, sem e-mail ainda.)
+- **Fase 1 — Transform offline**: com a amostra `.xlsx`, implementar `transform.py` + `test_transform.py`. Render local e abrir no navegador. (Sem e-mail ainda.)
 - **Fase 2 — Inbox**: `local_client.py` lendo de `inbox/` (✅ concluído).
 - **Fase 3 — E-mail**: `mailer.py` com corpo email-safe + anexo. Teste enviando para você mesmo.
 - **Fase 4 — Orquestração**: `pipeline.py` + `run.py` (one-shot) ponta a ponta.
@@ -378,7 +372,7 @@ Ainda em aberto:
 
 ## 12.1. Logs (`logging_setup.py`)
 
-Double-sink, igual ao FlowETL: **console** + **arquivo**.
+Double-sink: **console** + **arquivo**.
 
 ```
 - Arquivo: logs/book_AAAA-MM-DD.log (um por dia; rotação por data no nome).
@@ -417,12 +411,12 @@ Cole isto na primeira mensagem do Claude Code, com o `CLAUDE.md` na raiz do proj
 > "Leia o CLAUDE.md por completo. Implemente as Fases 0 e 1: estrutura de pastas, requirements.txt,
 > .gitignore, .env.example, config.py, logging_setup.py, templates/book_template.html (a partir do
 > mock, com o marcador), transform.py e test_transform.py. O test_transform.py deve rodar contra
-> tests/fixtures/sample.xlsx e afirmar exatamente: total=1595, inc=1248, sol=347, sla=64, res=1589,
-> NF=101, Estoque=35, Pedido=167. Rode o pytest e me mostre verde antes de seguir para o Drive/e-mail."
+> tests/fixtures/sample.xlsx (coloque a planilha real antes de rodar). Configure as KEYWORDS em
+> transform.py conforme sua operação. Rode o pytest e me mostre verde antes de seguir para o e-mail."
 
 ---
 
-- Logging double-sink (console + `logs/book_AAAA-MM-DD.log`), igual ao FlowETL.
+- Logging double-sink (console + `logs/book_AAAA-MM-DD.log`).
 - Alertas Telegram nunca derrubam o pipeline; se token/chat vazios, viram no-op.
 - Nada de segredos no código nem no Git: `.env` e o token do Telegram são *gitignored*.
 - Toda agregação testável isoladamente (input DataFrame → output dict), sem depender de Drive/SMTP.

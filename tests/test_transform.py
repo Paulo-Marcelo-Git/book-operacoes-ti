@@ -1,7 +1,8 @@
-"""Valida o transform contra a planilha real (números confirmados).
+"""Valida a integridade estrutural do transform.
 
-A fixture sample.xlsx contém dados reais e NÃO é versionada (ver .gitignore).
-Se ela não estiver presente (ex.: clone limpo), os testes são pulados.
+A fixture sample.xlsx NÃO é versionada (contém dados reais).
+Coloque a planilha em tests/fixtures/ antes de rodar.
+Se ausente (ex.: clone limpo), os testes são pulados automaticamente.
 """
 from pathlib import Path
 
@@ -19,20 +20,19 @@ skip_sem_fixture = pytest.mark.skipif(
 @skip_sem_fixture
 def test_kpis_totais():
     D = transform.build_from_file(FIXTURE)
-    assert D["total"] == 1595
-    assert D["inc_total"] == 1248
-    assert D["sol_total"] == 347
-    assert D["sla_total"] == 64
-    assert D["res_total"] == 1589
+    assert D["total"] > 0
+    assert D["inc_total"] + D["sol_total"] == D["total"]
+    assert 0 <= D["sla_total"] <= D["total"]
+    assert 0 <= D["res_total"] <= D["total"]
 
 
 @skip_sem_fixture
 def test_keywords():
     D = transform.build_from_file(FIXTURE)
-    kw = {k["keyword"]: k["total"] for k in D["keywords"]}
-    assert kw["Nota Fiscal / NF"] == 101
-    assert kw["Estoque"] == 35
-    assert kw["Pedido"] == 167   # palavra exata: NÃO conta "pedidos"
+    assert len(D["keywords"]) == len(transform.KEYWORDS)
+    for kw in D["keywords"]:
+        assert kw["total"] >= 0
+        assert "por_grupo" in kw
 
 
 @skip_sem_fixture
