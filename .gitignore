@@ -22,6 +22,7 @@ inbox/processados/*.xlsx
 inbox/processados/*.xls
 !inbox/.gitkeep
 !inbox/processados/.gitkeep
+inbox/.sync_*.json
 output/*
 !output/.gitkeep
 logs/*
